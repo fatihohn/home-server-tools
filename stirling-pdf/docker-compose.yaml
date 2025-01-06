@@ -7,8 +7,10 @@ services:
       - ./stirling/extraConfigs:/configs
       - ./stirling/customFiles:/customFiles/
       - ./stirling/logs:/logs/
+    env_file:
+    - .env
     environment:
-      - DOCKER_ENABLE_SECURITY=false
+      - DOCKER_ENABLE_SECURITY=true
     ports:
       - "8001:8080"
     restart: unless-stopped
