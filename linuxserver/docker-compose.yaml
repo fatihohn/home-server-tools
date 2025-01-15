@@ -5,9 +5,9 @@ services:
     cap_add:
       - NET_ADMIN
     env_file:
-      - .env
+      - ./swag/.env
     volumes:
-      - ./swag:/config
+      - ./swag/config:/config
     ports:
       - 444:443
       - 81:80
@@ -17,13 +17,10 @@ services:
   habridge:
     image: lscr.io/linuxserver/habridge:latest
     container_name: habridge
-    environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=Etc/UTC
-      - SEC_KEY=
+    env_file:
+      - ./habridge/.env
     volumes:
-      - ./habridge:/config
+      - ./habridge/config:/config
     ports:
       - 8010:8080
       - 50000:50000
