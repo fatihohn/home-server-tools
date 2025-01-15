@@ -1,0 +1,31 @@
+services:
+  swag:
+    image: lscr.io/linuxserver/swag
+    container_name: swag
+    cap_add:
+      - NET_ADMIN
+    env_file:
+      - .env
+    volumes:
+      - ./swag:/config
+      - ../nvme/share/nas/linuxserver/swag/config/nginx/site-confs:/config/nginx/site-confs
+    ports:
+      - 444:443
+      - 81:80
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: unless-stopped
+  habridge:
+    image: lscr.io/linuxserver/habridge:latest
+    container_name: habridge
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Etc/UTC
+      - SEC_KEY=
+    volumes:
+      - ./habridge:/config
+    ports:
+      - 8010:8080
+      - 50000:50000
+    restart: unless-stopped
