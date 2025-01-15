@@ -1,7 +1,7 @@
 services:
   homeassistant:
-    container_name: homeassistant
     image: "ghcr.io/home-assistant/home-assistant:stable"
+    container_name: homeassistant
     env_file:
       - .env
     ports:
