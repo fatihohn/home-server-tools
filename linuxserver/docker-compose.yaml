@@ -14,14 +14,14 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
     restart: unless-stopped
-  habridge:
-    image: lscr.io/linuxserver/habridge:latest
-    container_name: habridge
-    env_file:
-      - ./habridge/.env
-    volumes:
-      - ./habridge/config:/config
-    ports:
-      - 8010:8080
-      - 50000:50000
-    restart: unless-stopped
+  # habridge:
+  #   image: lscr.io/linuxserver/habridge:latest
+  #   container_name: habridge
+  #   env_file:
+  #     - ./habridge/.env
+  #   volumes:
+  #     - ./habridge/config:/config
+  #   ports:
+  #     - 8010:8080
+  #     - 50000:50000
+  #   restart: unless-stopped
