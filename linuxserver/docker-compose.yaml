@@ -8,7 +8,7 @@ services:
       - .env
     volumes:
       - ./swag:/config
-      - ../nvme/share/nas/linuxserver/swag/config/nginx/site-confs:/config/nginx/site-confs
+      - ../../nvme/share/nas/linuxserver/swag/config/nginx/site-confs:/config/nginx/site-confs
     ports:
       - 444:443
       - 81:80
