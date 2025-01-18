@@ -1,7 +1,7 @@
 services:
   swag:
     image: lscr.io/linuxserver/swag
-    container_name: swag
+    container_name: linuxserver-swag
     cap_add:
       - NET_ADMIN
     env_file:
@@ -14,9 +14,22 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
     restart: unless-stopped
+
+  certbot:
+    build:
+      context: ./certbot
+    container_name: linuxserver-certbot
+    restart: unless-stopped
+    env_file:
+      - ./certbot/.env
+    volumes:
+      - ./swag/config/etc/letsencrypt:/etc/letsencrypt
+      - ./swag/config/dns-conf/cloudflare.ini:/etc/cloudflare/cloudflare.ini
+      - ./certbot/www:/var/www/certbot
+
   # habridge:
   #   image: lscr.io/linuxserver/habridge:latest
-  #   container_name: habridge
+  #   container_name: linuxserver-habridge
   #   env_file:
   #     - ./habridge/.env
   #   volumes:
