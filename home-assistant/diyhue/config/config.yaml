@@ -1,0 +1,92 @@
+Remote API enabled: false
+Hue Essentials key: e8f2ae56d88c11efbb590242ac150002
+discovery: true
+scanonhostip: true
+mqtt:
+  enabled: false
+deconz:
+  enabled: false
+alarm:
+  enabled: false
+  lasttriggered: 0
+port:
+  enabled: false
+  ports:
+  - 80
+apiUsers: {}
+apiversion: 1.68.0
+name: DiyHue Bridge
+netmask: 255.255.255.0
+swversion: '1968096020'
+timezone: Asia/Seoul
+linkbutton:
+  lastlinkbuttonpushed: 1737530250
+users:
+  fatihohn@gmail.com:
+    password: pbkdf2:sha256:260000$bEfSa0x8vGzSN3Yi$81abd4dfe88967483c6421aafa30ecb66cb632a6ea00639c86d7dd0b515a7b59
+hue: {}
+tradfri: {}
+homeassistant:
+  enabled: true
+  homeAssistantIp: host.docker.internal
+  homeAssistantPort: 8123
+  homeAssistantToken: ''
+  homeAssistantIncludeByDefault: true
+  homeAssistantUseHttps: false
+yeelight:
+  enabled: true
+native_multi:
+  enabled: true
+tasmota:
+  enabled: true
+wled:
+  enabled: true
+shelly:
+  enabled: true
+esphome:
+  enabled: true
+hyperion:
+  enabled: true
+tpkasa:
+  enabled: true
+elgato:
+  enabled: true
+zigbee_device_discovery_info:
+  status: ready
+swupdate2:
+  autoinstall:
+    'on': false
+    updatetime: T14:00:00
+  bridge:
+    lastinstall: '2025-01-22T06:48:39'
+    state: noupdates
+  checkforupdate: false
+  lastchange: '2025-01-22T06:48:39'
+  state: noupdates
+  install: false
+IP_RANGE:
+  IP_RANGE_START: 0
+  IP_RANGE_END: 255
+  SUB_IP_RANGE_START: 0
+  SUB_IP_RANGE_END: 0
+ipaddress: 172.21.0.2
+gateway: 172.21.0.1
+mac: 02:42:ac:15:00:02
+bridgeid: 0242ACFFFE150002
+loglevel: INFO
+whitelist:
+  f2beb0c4d88c11ef953d0242ac150002:
+    name: WebUi
+    client_key: null
+    create_date: '2025-01-22T06:48:38'
+    last_use_date: '2025-01-22T09:59:19'
+  b9c94958d88e11efb4ca0242ac150002:
+    name: home-assistant#jib
+    client_key: null
+    create_date: '2025-01-22T06:55:09'
+    last_use_date: '2025-01-22T09:59:52'
+  hueess62d89011efbd2d0242ac150002:
+    name: Hue Essentials#iPhone
+    client_key: null
+    create_date: '2025-01-22T06:55:09'
+    last_use_date: '2025-01-22T07:13:18'

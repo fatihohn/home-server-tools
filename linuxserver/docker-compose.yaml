@@ -8,6 +8,7 @@ services:
       - ./swag/.env
     volumes:
       - ./swag/config:/config
+      - /home/nas/nvme/share/donghun/documents/resume/_latest:/static_files
     ports:
       - 444:443
       - 81:80
