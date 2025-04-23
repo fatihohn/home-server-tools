@@ -44,29 +44,3 @@ services:
     volumes:
       - /home/nas/nvme/share/nas/tmp/motion_recorder/recordings:/recordings
     restart: unless-stopped
-
-#   diyHue:
-#     image: diyhue/core:latest
-#     # This makes for more convienient naming, but only allows one instance of the image
-#     container_name: diyHue
-#     restart: unless-stopped
-
-#     # environment:
-#     #   # Uncomment to enable debug mode
-#     #   # DEBUG: true
-#     #   # IP and MAC are only needed for running diyHue in the bridge network
-#     #   IP: 192.168.45.33
-#     #   MAC: C6:E8:AA:61:9D:0A
-#     volumes:
-#       - ./diyhue/export:/opt/hue-emulator/export
-#       - ./diyhue/config:/opt/hue-emulator/config
-#       - /run/dbus:/run/dbus:ro
-#     privileged: true
-#     ports:
-#       - '8030:80'
-#       - '443:443'
-#       - '1900:1900/udp'
-#       - '2100:2100/udp'
-#       - '1982:1982/udp'
-#     # # Alternatively, you can activate host mode by uncommenting the line below and removing all ports and the env vars above
-#     # network_mode: host
