@@ -1,4 +1,4 @@
 #!/bin/bash
 
-# Delete MP4 files older than 30 days from the recordings directory
-find /recordings -name "*.mp4" -type f -mtime +30 -delete 
+# 기준: 7일 이상 지난 /recordings 내 디렉토리 삭제
+find /recordings/* -maxdepth 0 -type d -mtime +14 -exec rm -rf {} \;

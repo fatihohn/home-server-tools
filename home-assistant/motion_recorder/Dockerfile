@@ -6,7 +6,7 @@ COPY . /app
 
 RUN pip install uv && \
     uv venv && \
-    uv pip install python-dotenv opencv-python-headless
+    uv pip install python-dotenv opencv-python-headless ultralytics
 
 RUN apt-get update && \
     apt-get install -y ffmpeg cron && \
