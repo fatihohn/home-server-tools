@@ -7,11 +7,14 @@ import datetime
 import subprocess
 import time
 import shutil
+import select
 from dotenv import load_dotenv
 from ultralytics import YOLO
 
+# === 설정 ===
 load_dotenv()
 rtsp_url = os.getenv("MOTION_RECORDER_RTSP_URL")
+RECORDINGS_DIR = "/recordings"
 TARGET_CLASSES = {'person', 'dog', 'cat'}
 
 if not rtsp_url:
@@ -19,43 +22,56 @@ if not rtsp_url:
 else:
     print(f"MOTION_RECORDER_RTSP_URL: {rtsp_url}")
 
+# === 모델 로딩 ===
 model = YOLO("yolov8n.pt")
 model.fuse()
 model.half()
 cv2.setNumThreads(1)
 
+# === 타겟 객체 감지 ===
 def contains_target_object(frame):
     results = model(frame)
-    names = model.names
     for box in results[0].boxes:
         class_id = int(box.cls[0])
-        label = names[class_id]
+        label = model.names[class_id]
         if label in TARGET_CLASSES:
             return True
     return False
 
+# === FPS 감시 후 비정상적으로 낮으면 프로세스 종료 ===
 def monitor_fps_and_kill(process, min_fps=5, duration=5):
     low_fps_start = None
     fps_pattern = re.compile(r'fps=(\d+(\.\d+)?)')
 
-    for line in iter(process.stderr.readline, b''):
-        decoded = line.decode('utf-8', errors='ignore').strip()
-        print(decoded)
-        match = fps_pattern.search(decoded)
-        if match:
-            fps = float(match.group(1))
-            print(f"📉 현재 FPS: {fps}")
-            if fps <= min_fps:
-                if low_fps_start is None:
-                    low_fps_start = time.time()
-                elif time.time() - low_fps_start > duration:
-                    print("❗ FPS가 너무 낮습니다. 프로세스를 종료합니다.")
-                    process.terminate()
-                    break
-            else:
-                low_fps_start = None
+    while True:
+        rlist, _, _ = select.select([process.stderr], [], [], 1.0)
+        if rlist:
+            line = process.stderr.readline()
+            if not line:
+                break
+            decoded = line.decode('utf-8', errors='ignore').strip()
+            print(decoded)
+            match = fps_pattern.search(decoded)
+            if match:
+                fps = float(match.group(1))
+                print(f"📉 현재 FPS: {fps}")
+                if fps <= min_fps:
+                    if low_fps_start is None:
+                        low_fps_start = time.time()
+                    elif time.time() - low_fps_start > duration:
+                        print("❗ FPS 저하로 FFmpeg 종료")
+                        process.terminate()
+                        break
+                else:
+                    low_fps_start = None
+        elif process.poll() is not None:
+            break
 
+# === 영상 내 타겟 객체 존재 여부 확인 ===
 def detect_target_in_video(video_path, max_frames=5):
+    if not os.path.exists(video_path):
+        return False
+
     cap = cv2.VideoCapture(video_path)
     frame_count = 0
     while cap.isOpened() and frame_count < max_frames:
@@ -71,6 +87,7 @@ def detect_target_in_video(video_path, max_frames=5):
     cap.release()
     return False
 
+# === 메인 동작 루프 ===
 def detect_motion_and_record(rtsp_url):
     cap = cv2.VideoCapture(rtsp_url)
     if not cap.isOpened():
@@ -81,8 +98,6 @@ def detect_motion_and_record(rtsp_url):
 
     ret, frame1 = cap.read()
     ret, frame2 = cap.read()
-    frame_interval = 3
-    frame_count = 0
 
     while ret:
         diff = cv2.absdiff(frame1, frame2)
@@ -100,60 +115,65 @@ def detect_motion_and_record(rtsp_url):
                 now = datetime.datetime.now()
                 date_str = now.strftime("%Y%m%d")
                 time_str = now.strftime("%H%M%S")
-                save_dir = f"/recordings/{date_str}"
+                save_dir = os.path.join(RECORDINGS_DIR, date_str)
                 os.makedirs(save_dir, exist_ok=True)
 
-                temp_filename = f"/recordings/tmp_{time_str}.mp4"
+                temp_filename = os.path.join(RECORDINGS_DIR, f"tmp_{time_str}.mp4")
                 final_filename = os.path.join(save_dir, f"motion_{time_str}.mp4")
+
+                cmd = [
+                    "timeout", "35s",
+                    "ffmpeg",
+                    "-y",
+                    "-rtsp_transport", "tcp",
+                    "-i", rtsp_url,
+                    "-r", "15",
+                    "-vsync", "vfr",
+                    "-t", "30",
+                    "-threads", "1",
+                    "-vcodec", "libx264",
+                    "-preset", "ultrafast",
+                    "-bufsize", "2M",
+                    "-vf", "scale=960:720",
+                    temp_filename,
+                ]
 
                 try:
                     process = subprocess.Popen(
-                        [
-                            "ffmpeg",
-                            "-y",
-                            "-rtsp_transport", "tcp",
-                            "-timeout", "5000000",
-                            "-i", rtsp_url,
-                            "-r", "15",
-                            "-vsync", "vfr",
-                            "-t", "30",
-                            "-threads", "1",
-                            "-vcodec", "libx264",
-                            "-preset", "ultrafast",
-                            "-bufsize", "2M",
-                            "-vf", "scale=960:720",
-                            temp_filename,
-                        ],
+                        cmd,
                         stderr=subprocess.PIPE,
                         stdout=subprocess.DEVNULL
                     )
                     threading.Thread(target=monitor_fps_and_kill, args=(process,), daemon=True).start()
-                    process.wait()
+                    process.wait(timeout=40)
+                except subprocess.TimeoutExpired:
+                    print("❗ FFmpeg 타임아웃 - 강제 종료합니다.")
+                    process.kill()
                 except Exception as e:
-                    process.terminate()
+                    print("❗ FFmpeg 실행 오류:", str(e))
+                    process.kill()
 
-                # 타겟 객체 있는지 확인 후 저장 여부 결정
-                if detect_target_in_video(temp_filename):
+                if os.path.exists(temp_filename) and detect_target_in_video(temp_filename):
                     shutil.move(temp_filename, final_filename)
                     print(f"녹화 완료: {final_filename}")
                 else:
-                    os.remove(temp_filename)
-                    print("타겟 객체 없음. 영상 삭제됨.")
+                    if os.path.exists(temp_filename):
+                        os.remove(temp_filename)
+                    print("타겟 객체 없음 또는 영상 없음. 파일 삭제됨.")
+
                 time.sleep(1)
 
         frame1 = frame2
-        frame_count += 1
-        if frame_count % frame_interval != 0:
-            ret, frame2 = cap.read()
-            continue
+        ret, frame2 = cap.read()
 
     cap.release()
 
+# === 진입점 ===
 if __name__ == "__main__":
     while True:
         try:
             detect_motion_and_record(rtsp_url)
-        except Exception as e:
+        except Exception:
             print("❗ 에러 발생, 5초 후 재시도:")
             traceback.print_exc()
             time.sleep(5)
