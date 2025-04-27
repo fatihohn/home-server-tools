@@ -1,0 +1,30 @@
+services:
+  go-motion:
+    container_name: motion_recorder_go-motion
+    build:
+      context: ./go-motion
+    depends_on:
+      - yolo
+    ports:
+      - "8080:8080"
+    volumes:
+      - /home/nas/nvme/share/nas/tmp/motion_recorder/recordings:/recordings
+    env_file:
+      - ../.env
+    networks:
+      - motion_recorder
+    restart: unless-stopped
+
+  yolo:
+    container_name: motion_recorder_yolo
+    build:
+      context: ./yolo-api
+    ports:
+      - "5000:5000"
+    restart: unless-stopped
+    networks:
+      - motion_recorder
+
+networks:
+  motion_recorder:
+    driver: bridge
